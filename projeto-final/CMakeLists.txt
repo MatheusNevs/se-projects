@@ -15,9 +15,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.1.0)
-set(toolchainVersion 13_3_Rel1)
-set(picotoolVersion 2.1.0)
+set(sdkVersion 1.5.0)
+set(toolchainVersion 12_3_Rel1)
+set(picotoolVersion 2.0.0)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -60,6 +60,7 @@ target_include_directories(projeto-final PRIVATE
 target_link_libraries(projeto-final 
         hardware_i2c
         pico_cyw43_arch_lwip_threadsafe_background
+        pico_lwip_http
         )
 
 pico_add_extra_outputs(projeto-final)
