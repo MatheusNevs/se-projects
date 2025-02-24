@@ -21,6 +21,9 @@ uint8_t ssd[ssd1306_buffer_length];
 char ssid[] = "EDI";
 char pass[] = "f1v3k1d5";
 
+#define BUTTON_SWITCH 5 // Button to switch between daily and hourly forecast
+#define BUTTON_NEXT 6   // Button to advance day/hour
+
 void setup_display()
 {
   // Inicialização do i2c
@@ -51,41 +54,109 @@ int main()
 {
   stdio_init_all();
 
-  // setup_display();
-  // draw_daily_forecast(ssd, &frame_area, "10", "february", "2025", "24", "25");
+  // Initialize display and buttons
+  setup_display();
+  gpio_init(BUTTON_SWITCH);
+  gpio_init(BUTTON_NEXT);
+  gpio_set_dir(BUTTON_SWITCH, GPIO_IN);
+  gpio_set_dir(BUTTON_NEXT, GPIO_IN);
+  gpio_pull_up(BUTTON_SWITCH);
+  gpio_pull_up(BUTTON_NEXT);
 
+  // Setup WiFi and get initial daily forecast
   setup_wifi(ssid, pass);
-  // struct http_response_t response = get_request("api.open-meteo.com", "/v1/forecast?latitude=15.47&longitude=47.56&daily=temperature_2m_max,temperature_2m_min");
-  // printf("printando buffer e index de fora da funcao");
-  // printf(*response.buffer, "\n");
-  // printf((char *)(*response.index), "\n");
-  // struct WeatherData parsedData = process_json_response(*response.buffer, strlen(*response.buffer));
 
-  // for (int i = 0; i < 7; i++)
-  // {
-  //   printf("Day %s - Max: %s°C, Min: %s°C\n", parsedData.time_data[i], parsedData.temp_max_data[i], parsedData.temp_min_data[i]);
-  // }
+  // Get initial daily forecast
+  struct http_response_t daily_response = get_request("api.open-meteo.com",
+                                                      "/v1/forecast?latitude=15.47&longitude=47.56&daily=temperature_2m_max,temperature_2m_min");
+  struct WeatherData daily_data = process_json_response(daily_response.buffer, strlen(daily_response.buffer));
 
-  struct http_response_t response2 = get_request("api.open-meteo.com", "/v1/forecast?latitude=15.47&longitude=47.56&hourly=precipitation,relative_humidity_2m,temperature_2m&forecast_days=1&forecast_hours=12");
-  printf("printando buffer e index de fora da funcao");
-  printf(response2.buffer, "\n");
-  printf((char *)(response2.index), "\n");
-  struct WeatherData parsedData2 = process_json_response(response2.buffer, strlen(response2.buffer));
+  // Get initial hourly forecast
+  struct http_response_t hourly_response = get_request("api.open-meteo.com",
+                                                       "/v1/forecast?latitude=15.47&longitude=47.56&hourly=precipitation,relative_humidity_2m,temperature_2m&forecast_days=1&forecast_hours=12");
+  struct WeatherData hourly_data = process_json_response(hourly_response.buffer, strlen(hourly_response.buffer));
 
-  for (int i = 0; i < 12; i++)
-  {
-    printf("Hour %s - Temp: %s°C, Humidity: %s%%, Precipitation: %s mm\n",
-           parsedData2.time_data[i],
-           parsedData2.temp_data[i],
-           parsedData2.humid_data[i],
-           parsedData2.precip_data[i]);
-  }
+  bool is_daily = true; // true for daily forecast, false for hourly
+  int current_index = 0;
+  bool last_switch_state = true;
+  bool last_next_state = true;
 
-  // Periodo 0 para diária, 1 para por hora
-  // int period = 0, index = 0;
+  // Initial display
+  char day[3], month[10], year[5];
+  sscanf(daily_data.daily_data[current_index], "%4s-%2s-%2s", year, month, day);
+  draw_daily_forecast(ssd, &frame_area,
+                      day,
+                      month,
+                      year,
+                      daily_data.temp_min_data[current_index],
+                      daily_data.temp_max_data[current_index]);
+
   while (true)
   {
-    sleep_ms(1000);
+    bool current_switch_state = gpio_get(BUTTON_SWITCH);
+    bool current_next_state = gpio_get(BUTTON_NEXT);
+
+    // Switch button pressed (mode change)
+    if (current_switch_state == false && last_switch_state == true)
+    {
+      is_daily = !is_daily;
+      current_index = 0;
+
+      if (is_daily)
+      {
+        char day[3], month[10], year[5];
+        sscanf(daily_data.daily_data[current_index], "%4s-%2s-%2s", year, month, day);
+        draw_daily_forecast(ssd, &frame_area,
+                            day,
+                            month,
+                            year,
+                            daily_data.temp_min_data[current_index],
+                            daily_data.temp_max_data[current_index]);
+      }
+      else
+      {
+        char hour[3], minute[3];
+        sscanf(hourly_data.hourly_data[current_index], "%2s:%2s", hour, minute);
+        draw_hourly_forecast(ssd, &frame_area,
+                             hour,
+                             minute,
+                             hourly_data.temp_data[current_index],
+                             hourly_data.humid_data[current_index],
+                             hourly_data.precip_data[current_index]);
+      }
+    }
+
+    // Next button pressed (advance index)
+    if (current_next_state == false && last_next_state == true)
+    {
+      if (is_daily)
+      {
+        current_index = (current_index + 1) % 7;
+        char day[3], month[10], year[5];
+        sscanf(daily_data.daily_data[current_index], "%4s-%2s-%2s", year, month, day);
+        draw_daily_forecast(ssd, &frame_area,
+                            day,
+                            month,
+                            year,
+                            daily_data.temp_max_data[current_index],
+                            daily_data.temp_min_data[current_index]);
+      }
+      else
+      {
+        current_index = (current_index + 1) % 12;
+        char hour[3], minute[3];
+        sscanf(hourly_data.hourly_data[current_index], "%2s:%2s", hour, minute);
+        draw_hourly_forecast(ssd, &frame_area,
+                             hour, minute,
+                             hourly_data.temp_data[current_index],
+                             hourly_data.humid_data[current_index],
+                             hourly_data.precip_data[current_index]);
+      }
+    }
+
+    last_switch_state = current_switch_state;
+    last_next_state = current_next_state;
+    sleep_ms(100); // Debounce delay
   }
 
   return 0;
