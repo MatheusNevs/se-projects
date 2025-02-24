@@ -29,7 +29,8 @@ struct WeatherData process_json_response(const char *json_buffer, size_t buffer_
   }
 
   // Arrays separados para cada tipo de dado
-  char time_data[12][10];   // Data - formato YYYY-MM-DD
+  char daily_data[7][11];   // Data - formato YYYY-MM-DD
+  char hourly_data[12][6];  // Hora - formato HH:MM
   char temp_min_data[7][7]; // Temperatura mínima - XX.X
   char temp_max_data[7][7]; // Temperatura máxima - XX.X
   char precip_data[12][7];  // Precipitação - XXX.X
@@ -49,13 +50,13 @@ struct WeatherData process_json_response(const char *json_buffer, size_t buffer_
         {
           if (jsoneq(json_buffer, &tokens[i], "daily") == 0)
           {
-            // For daily format, take YYYY-MM-DD
-            for (int k = 0; k < 7; k++)
+            int array_size = tokens[j + 1].size;
+            for (int k = 0; k < array_size && k < 7; k++)
             {
               jsmntok_t *value_token = &tokens[j + 2 + k];
-              int len = 10; // Only take YYYY-MM-DD
-              strncpy(time_data[k], json_buffer + value_token->start, len);
-              time_data[k][len] = '\0';
+              int len = value_token->end - value_token->start;
+              strncpy(daily_data[k], json_buffer + value_token->start, len);
+              daily_data[k][len] = '\0';
             }
           }
           else
@@ -66,8 +67,8 @@ struct WeatherData process_json_response(const char *json_buffer, size_t buffer_
               jsmntok_t *value_token = &tokens[j + 2 + k];
               int start = value_token->start + 11; // Skip to hour position
               int len = 5;                         // Take HH:00
-              strncpy(time_data[k], json_buffer + start, len);
-              time_data[k][len] = '\0';
+              strncpy(hourly_data[k], json_buffer + start, len);
+              hourly_data[k][len] = '\0';
             }
           }
         }
@@ -129,23 +130,23 @@ struct WeatherData process_json_response(const char *json_buffer, size_t buffer_
       }
 
       // Imprime os dados armazenados(debugging)
-      //   printf("\nDados armazenados:\n");
-      //   for (int k = 0; k < 12; k++)
-      //   {
-      //     printf("Data %s: Temp %.1f°C, Max %.1f°C, Min %.1f°C, Precip %.1fmm, Umid %.1f%%\n",
-      //            time_data[k], atof(temp_data[k]),
-      //            atof(temp_max_data[k]), atof(temp_min_data[k]),
-      //            atof(precip_data[k]), atof(humid_data[k]));
-      //   }
-      //   break;
+      // printf("\nDados armazenados:\n");
+      // for (int k = 0; k < 12; k++)
+      // {
+      //   printf("Data %s: Temp %.1f°C, Max %.1f°C, Min %.1f°C, Precip %.1fmm, Umid %.1f%%\n",
+      //          time_data[k], atof(temp_data[k]),
+      //          atof(temp_max_data[k]), atof(temp_min_data[k]),
+      //          atof(precip_data[k]), atof(humid_data[k]));
       // }
+      break;
     }
-    memcpy(data.humid_data, humid_data, sizeof(humid_data));
-    memcpy(data.precip_data, precip_data, sizeof(precip_data));
-    memcpy(data.temp_data, temp_data, sizeof(temp_data));
-    memcpy(data.temp_max_data, temp_max_data, sizeof(temp_max_data));
-    memcpy(data.temp_min_data, temp_min_data, sizeof(temp_min_data));
-    memcpy(data.time_data, time_data, sizeof(time_data));
-    return data;
   }
+  memcpy(data.humid_data, humid_data, sizeof(humid_data));
+  memcpy(data.precip_data, precip_data, sizeof(precip_data));
+  memcpy(data.temp_data, temp_data, sizeof(temp_data));
+  memcpy(data.temp_max_data, temp_max_data, sizeof(temp_max_data));
+  memcpy(data.temp_min_data, temp_min_data, sizeof(temp_min_data));
+  memcpy(data.daily_data, daily_data, sizeof(daily_data));
+  memcpy(data.hourly_data, hourly_data, sizeof(hourly_data));
+  return data;
 }
