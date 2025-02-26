@@ -1,22 +1,24 @@
 #include "display.hpp"
 
-Display::Display(uint8_t sda_pin, uint8_t scl_pin, uint32_t clock)
+Display::Display(uint8_t sda_pin, uint8_t scl_pin, uint32_t clock, uint8_t height, uint8_t width)
 {
   this->sda_pin = sda_pin;
   this->scl_pin = scl_pin;
   this->clock = clock;
+  this->height = height;
+  this->width = width;
 }
 
 void Display::setup()
 {
-  i2c_init(i2c1, 400000);
-  gpio_set_function(14, GPIO_FUNC_I2C);
-  gpio_set_function(15, GPIO_FUNC_I2C);
-  gpio_pull_up(2);
-  gpio_pull_up(3);
+  i2c_init(i2c1, clock);
+  gpio_set_function(sda_pin, GPIO_FUNC_I2C);
+  gpio_set_function(scl_pin, GPIO_FUNC_I2C);
+  gpio_pull_up(sda_pin);
+  gpio_pull_up(sda_pin);
 
   this->disp.external_vcc = false;
-  ssd1306_init(&disp, 128, 64, 0x3C, i2c1);
+  ssd1306_init(&disp, height, width, 0x3C, i2c1);
   ssd1306_clear(&disp);
   y = 0;
 }
