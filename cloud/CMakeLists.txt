@@ -34,8 +34,8 @@ project(cloud C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-include_directories(include)
-file(GLOB SOURCES "source/*.c")
+include_directories(include lib/ssd1306)
+file(GLOB SOURCES "source/*.c" "source/**/*.c" "lib/**/*.c")
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(cloud ${SOURCES} cloud.c)
@@ -59,8 +59,6 @@ target_include_directories(cloud PRIVATE
 # Add any user requested libraries
 target_link_libraries(cloud 
         hardware_i2c
-        pico_cyw43_arch_lwip_threadsafe_background
-        pico_lwip_http
         )
 
 pico_add_extra_outputs(cloud)
