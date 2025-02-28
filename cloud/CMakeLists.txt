@@ -35,7 +35,7 @@ project(cloud C CXX ASM)
 pico_sdk_init()
 
 include_directories(include lib/ssd1306)
-file(GLOB SOURCES "source/*.c" "source/**/*.c" "lib/**/*.c")
+file(GLOB SOURCES "source/*.cpp" "source/**/*.cpp" "lib/**/*.cpp")
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(cloud ${SOURCES} cloud.c)
