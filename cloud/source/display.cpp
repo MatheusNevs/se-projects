@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include <string.h>
 
 Display::Display(uint8_t sda_pin, uint8_t scl_pin, uint32_t clock, uint8_t height, uint8_t width)
 {
@@ -19,7 +20,7 @@ void Display::setup()
 
   this->disp.external_vcc = false;
   ssd1306_init(&disp, height, width, 0x3C, i2c1);
-  ssd1306_clear(&disp);
+  clear_display();
   y = 0;
 }
 
@@ -41,6 +42,6 @@ void Display::draw_line(uint8_t x1, uint8_t x2, uint8_t y1 = 0, uint8_t y2 = 0)
 
 void Display::clear_display()
 {
-  ssd1306_clear(&disp);
+  memset(disp.buffer, 0, disp.bufsize);
   ssd1306_show(&disp);
 }
