@@ -38,7 +38,7 @@ include_directories(include lib/ssd1306)
 file(GLOB SOURCES "source/*.cpp" "source/**/*.cpp" "lib/**/*.cpp")
 
 # Add executable. Default name is the project name, version 0.1
-add_executable(cloud ${SOURCES} cloud.c)
+add_executable(cloud ${SOURCES} cloud.cpp)
 
 pico_set_program_name(cloud "cloud")
 pico_set_program_version(cloud "0.1")

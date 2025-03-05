@@ -7,8 +7,8 @@
 
 class Display
 {
+protected:
   uint8_t sda_pin;
-  uint8_t scl_pin;
   uint8_t scl_pin;
   uint8_t height;
   uint8_t width;
