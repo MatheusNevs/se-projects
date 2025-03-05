@@ -2,12 +2,13 @@
 #define HOURLY_SCREEN_INTERFACE_HPP
 
 #include "screen.hpp"
+#include <cstdio>
 
 class HourlyScreen : public Screen
 {
 public:
   HourlyScreen(Display *display);
-  void execute(std::map<std::string, std::string> hourlyData) override;
+  void execute(HourlyDomain hourlyData) override;
 };
 
 #endif // HOURLY_SCREEN_INTERFACE_HPP
