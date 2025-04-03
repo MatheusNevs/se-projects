@@ -1,3 +1,4 @@
 # SE Projects
 
-Projetos de sistemas embarcados em C/C++
+Embedded systems projects in C/C++
+
